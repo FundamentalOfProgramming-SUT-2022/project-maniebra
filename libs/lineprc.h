@@ -26,6 +26,11 @@ void processLine(char **cmargs)
             char *argKey = cmargs[i];
             char *argVal = cmargs[i + 1];
 
+            if (argVal[0] == '"')
+            {
+                strcpy(argVal, substr(argVal, 1, strlen(argVal) - 1));
+            }
+
             if (strEq(argKey, "-file"))
             {
 
