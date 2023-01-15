@@ -5,6 +5,7 @@
 //////////////////////
 
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 
 #define getInt(_var) scanf("%i", &_var)
