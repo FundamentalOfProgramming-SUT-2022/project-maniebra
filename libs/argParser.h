@@ -51,7 +51,8 @@ char **getArg(char *inputLine)
             }
             else
             {
-                if (currChar == '-' && !(openQs % 2))
+                char before = inputLine[i - 1];
+                if (((currChar == '-') && (!(openQs % 2))) && (before == ' '))
                 {
                     *(arg + currIdx) = '\0';
                     *(listOfArgs + currNumOfArgs) = arg;
@@ -81,6 +82,7 @@ char **getArg(char *inputLine)
         currNumOfArgs++;
         currIdx = 0;
     }
+    *(listOfArgs + currNumOfArgs) = NULL;
     free(arg);
     return listOfArgs;
 }
