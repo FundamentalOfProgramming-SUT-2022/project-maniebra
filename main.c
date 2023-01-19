@@ -8,6 +8,7 @@
 
 int main()
 {
+    CreateFolder(rootFolder);
     string line = input();
     string *cmargs = getArg(line);
     processLine(cmargs);

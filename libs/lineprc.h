@@ -1,6 +1,21 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <conio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <stdbool.h>
+#include <windows.h>
+
+void CreateFolder(const char *path)
+{
+    if (!CreateDirectory(path, NULL))
+    {
+        return;
+    }
+}
+
+char *rootFolder = "C:/Users/Public/Documents/root1/";
 
 #define strEq(a, b) (!strcmp(a, b))
 
@@ -33,7 +48,14 @@ void processLine(char **cmargs)
 
             if (strEq(argKey, "-file"))
             {
-
+                if (argVal[1] != ':' && (argVal[2] != '/' || argVal[2] != '\\'))
+                {
+                    char address[512];
+                    strcpy(address, rootFolder);
+                    strcat(address, argVal);
+                    strcpy(argVal, address);
+                    printf(argVal);
+                }
                 FILE *file;
                 file = fopen(argVal, "w");
 
