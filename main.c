@@ -8,8 +8,9 @@
 
 int main()
 {
-    CreateFolder(rootFolder);
-    string line = input();
-    string *cmargs = getArg(line);
-    processLine(cmargs);
+    // CreateFolder(rootFolder);
+    // string line = input();
+    // string *cmargs = getArg(line);
+    // processLine(cmargs);
+    char *l[3] = {"C:/Users/Public/Documents/root/text hellloooo.gg", "C:/Users/Public/Documents/root/123123.gg"};
 }
