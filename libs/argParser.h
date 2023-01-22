@@ -33,44 +33,29 @@ char **getArg(char *inputLine)
         }
         else
         {
-            if (currNumOfArgs % 2)
+
+            if (currChar == ' ' && (!(openQs % 2)))
             {
-                if (currChar == ' ')
-                {
-                    *(arg + currIdx) = '\0';
-                    *(listOfArgs + currNumOfArgs) = arg;
-                    arg = (char *)malloc(inputSize);
-                    currNumOfArgs++;
-                    currIdx = 0;
-                }
-                else
-                {
-                    *(arg + currIdx) = currChar;
-                    currIdx++;
-                }
+                *(arg + currIdx) = '\0';
+                *(listOfArgs + currNumOfArgs) = arg;
+                arg = (char *)malloc(inputSize);
+                currNumOfArgs++;
+                openQs = 0;
+                currIdx = 0;
             }
             else
             {
-                char before = inputLine[i - 1];
-                if (((currChar == '-') && (!(openQs % 2))) && (before == ' '))
+                if (currChar == '"' && inputLine[i - 1] != '\\')
                 {
-                    *(arg + currIdx) = '\0';
-                    *(listOfArgs + currNumOfArgs) = arg;
-                    arg = (char *)malloc(inputSize);
-                    currNumOfArgs++;
-                    currIdx = 0;
-                    i--;
-                    openQs = 0;
+                    *(arg + currIdx) = '\"';
+                    openQs++;
                 }
                 else
                 {
-                    if (currChar == '"')
-                    {
-                        openQs++;
-                    }
                     *(arg + currIdx) = currChar;
-                    currIdx++;
                 }
+
+                currIdx++;
             }
         }
     }
