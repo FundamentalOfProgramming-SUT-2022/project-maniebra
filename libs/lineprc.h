@@ -201,7 +201,7 @@ char *grep(char **files, char *pattern, int options)
 char *insertstr(char *fileName, char *toBeInserted, int lineNo, int pos)
 {
     if (!checkFileValidity(fileName))
-        return "EROR: file not found!";
+        return "ERROR! File has not been found!";
 
     FILE *fileToEdit = fopen(fileName, "r");
 
@@ -230,7 +230,6 @@ char *insertstr(char *fileName, char *toBeInserted, int lineNo, int pos)
 
             i += 2;
         }
-        i++;
 
         if (toBeInserted[i] == '\0')
         {
@@ -238,11 +237,12 @@ char *insertstr(char *fileName, char *toBeInserted, int lineNo, int pos)
         }
         char c[2] = {toBeInserted[i], '\0'};
         strcat(str, c);
+        i++;
     }
 
     char file[4096];
     file[0] = '\0';
-    for (int i = 1; i < lineNo; i++)
+    for (int i = 0; i < lineNo; i++)
     {
         char thisLine[2048];
         if (fgets(thisLine, 2048, fileToEdit) == NULL)
@@ -270,7 +270,7 @@ char *insertstr(char *fileName, char *toBeInserted, int lineNo, int pos)
         fputs(file, fileToEdit);
         fclose(fileToEdit);
 
-        return "SUCCESS: sentence inserted!";
+        return "String successfully inserted!";
     }
 
     int length = strlen(thisLine) - 1;
@@ -308,7 +308,68 @@ char *insertstr(char *fileName, char *toBeInserted, int lineNo, int pos)
     fputs(file, fileToEdit);
     fclose(fileToEdit);
 
-    return "SUCCESS: sentence inserted!";
+    return "String successfully inserted!";
+}
+
+char *removestr(char *address, int lineNo, int pos, int size, char bOrF)
+{
+    if (!checkFileValidity(address))
+    {
+        return "ERROR! File has not been found!";
+    }
+
+    FILE *file;
+    file = fopen(address, "r");
+    char *preTarget = malloc(sizeof(char)), *postTarget = malloc(sizeof(char));
+    int postIdx = 0;
+    while (1)
+    {
+        fscanf(file, "%c", &preTarget[postIdx]);
+        if (lineNo <= 1 && pos <= 1)
+            break;
+
+        if (lineNo == 1)
+            pos--;
+        if (preTarget[postIdx] == '\n')
+            lineNo--;
+        postIdx++;
+        preTarget = realloc(preTarget, (postIdx + 1));
+    }
+
+    postIdx = 0;
+    while (1)
+    {
+        fscanf(file, "%c", &postTarget[postIdx]);
+        if (postTarget[postIdx] == '\0')
+            break;
+        postTarget = realloc(postTarget, ((++postIdx) + 1));
+    }
+    fclose(file);
+
+    file = fopen(address, "w");
+
+    int forward = 0;
+    int backward = postIdx;
+
+    size--;
+
+    forward += (bOrF == 'f') * size;
+    backward -= (bOrF == 'b') * size;
+
+    for (int idx = 0; idx < backward; idx++)
+    {
+        fprintf(file, "%c", preTarget[idx]);
+    }
+
+    for (int idx = forward; idx < postIdx; idx++)
+    {
+        fprintf(file, "%c", postTarget[idx]);
+    }
+    fprintf(file, "\0");
+    free(preTarget);
+    free(postTarget);
+    fclose(file);
+    return "String successfully removed!";
 }
 
 //
@@ -364,7 +425,7 @@ char *processLine(char **cmargs)
                 sscanf(argVal, "%i:%i", &lineNo, &pos);
             }
         }
-        return insertstr(address, str, lineNo, pos);
+        return insertstr(parsePath(address), str, lineNo, pos);
     }
     else if (strEq(baseCmd, "cat"))
     {
@@ -386,10 +447,13 @@ char *processLine(char **cmargs)
     }
     else if (strEq(baseCmd, "removestr"))
     {
+
         // needed
         char *address = malloc(128);
         int lineNo = 0, pos = 0;
+        long long size = 0;
         char fOrB = 'a';
+
         //
         int i = 1;
 
@@ -402,13 +466,20 @@ char *processLine(char **cmargs)
 
             if (strEq(argKey, "-file"))
             {
+
                 strcpy(address, argVal);
             }
+
             else if (strEq(argKey, "-pos"))
             {
                 sscanf(argVal, "%i:%i", &lineNo, &pos);
             }
+            else if (strEq(argKey, "-size"))
+            {
+                size = atoll(argVal);
+            }
         }
+
         if (strEq(cmargs[i], "-b"))
         {
             fOrB = 'b';
@@ -417,6 +488,7 @@ char *processLine(char **cmargs)
         {
             fOrB = 'f';
         }
+        return removestr(parsePath(address), lineNo, pos, size, fOrB);
     }
     else if (strEq(baseCmd, "copystr"))
     {
