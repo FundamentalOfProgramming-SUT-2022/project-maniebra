@@ -11,5 +11,7 @@ int main()
     CreateFolder(rootFolder);
     string line = input();
     string *cmargs = getArg(line);
-    processLine(cmargs);
+    string response = malloc(512);
+    response = processLine(cmargs);
+    puts(response);
 }

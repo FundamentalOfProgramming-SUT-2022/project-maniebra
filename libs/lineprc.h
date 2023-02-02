@@ -38,6 +38,20 @@ int appendStr(char *s, size_t size, char str[])
     }
     return 0;
 }
+char *substr(const char *src, int begin, int end)
+{
+    int len = end - begin;
+    char *dest = (char *)malloc(sizeof(char) * (len + 1));
+    for (int i = begin; i < end /* && (*(src + i) != '\0')*/
+         ;
+         i++)
+    {
+        *dest = *(src + i);
+        dest++;
+    }
+    *dest = '\0';
+    return dest - len;
+}
 
 char *rootFolder = "C:/Users/Public/Documents/root/";
 
@@ -66,20 +80,6 @@ bool checkFileValidity(char *filename)
 
 #define strEq(a, b) (!strcmp(a, b))
 
-char *substr(const char *src, int begin, int end)
-{
-    int len = end - begin;
-    char *dest = (char *)malloc(sizeof(char) * (len + 1));
-    for (int i = begin; i < end /* && (*(src + i) != '\0')*/
-         ;
-         i++)
-    {
-        *dest = *(src + i);
-        dest++;
-    }
-    *dest = '\0';
-    return dest - len;
-}
 char *removeQs(char *argVal)
 {
     if (argVal[0] == '"')
@@ -94,6 +94,7 @@ char *removeQs(char *argVal)
 //
 char *createFile(char fileAddress[])
 {
+    CreateFolder(fileAddress);
     fileAddress = parsePath(fileAddress);
     FILE *file;
     file = fopen(fileAddress, "w");
@@ -197,10 +198,123 @@ char *grep(char **files, char *pattern, int options)
     return output;
 }
 
+char *insertstr(char *fileName, char *toBeInserted, int lineNo, int pos)
+{
+    if (!checkFileValidity(fileName))
+        return "EROR: file not found!";
+
+    FILE *fileToEdit = fopen(fileName, "r");
+
+    char str[2048] = "\0";
+    int i = 0;
+    while (toBeInserted[i] != '\0')
+    {
+
+        while (toBeInserted[i] == '\\')
+        {
+
+            if (toBeInserted[i + 1] == 'n')
+            {
+                strcat(str, "\n\0");
+            }
+
+            else if (toBeInserted[i + 1] == '\\')
+            {
+                strcat(str, "\\\0");
+            }
+
+            else if (toBeInserted[i + 1] == '\"')
+            {
+                strcat(str, "\"\0");
+            }
+
+            i += 2;
+        }
+        i++;
+
+        if (toBeInserted[i] == '\0')
+        {
+            break;
+        }
+        char c[2] = {toBeInserted[i], '\0'};
+        strcat(str, c);
+    }
+
+    char file[4096];
+    file[0] = '\0';
+    for (int i = 1; i < lineNo; i++)
+    {
+        char thisLine[2048];
+        if (fgets(thisLine, 2048, fileToEdit) == NULL)
+        {
+            strcat(file, "\n");
+        }
+        else
+        {
+            strcat(file, thisLine);
+        }
+    }
+
+    char thisLine[2048];
+    if (fgets(thisLine, 2048, fileToEdit) == NULL)
+    {
+        for (int i = 1; i <= pos; ++i)
+        {
+            strcat(file, " ");
+        }
+
+        strcat(file, str);
+        fclose(fileToEdit);
+
+        fileToEdit = fopen(fileName, "w");
+        fputs(file, fileToEdit);
+        fclose(fileToEdit);
+
+        return "SUCCESS: sentence inserted!";
+    }
+
+    int length = strlen(thisLine) - 1;
+    if (length < pos)
+    {
+        strncat(file, thisLine, length);
+        for (int i = 1; i <= pos - length; i++)
+        {
+            strcat(file, " ");
+        }
+        strcat(file, str);
+        strcat(file, "\n");
+    }
+
+    else
+    {
+        strncat(file, thisLine, pos);
+        strcat(file, str);
+        strcat(file, thisLine + pos);
+    }
+
+    for (int i = 1;; i++)
+    {
+        char restOfText[2048];
+        if (fgets(restOfText, 2048, fileToEdit) == NULL)
+        {
+            break;
+        }
+        strcat(file, restOfText);
+    }
+
+    fclose(fileToEdit);
+
+    fileToEdit = fopen(fileName, "w");
+    fputs(file, fileToEdit);
+    fclose(fileToEdit);
+
+    return "SUCCESS: sentence inserted!";
+}
+
 //
 //
 
-void processLine(char **cmargs)
+char *processLine(char **cmargs)
 {
     char *baseCmd = cmargs[0];
     if (strEq(baseCmd, "createfile"))
@@ -221,7 +335,7 @@ void processLine(char **cmargs)
                 strcpy(fileAddress, argVal);
             }
         }
-        printf(createFile(fileAddress));
+        return (createFile(fileAddress));
     }
     else if (strEq(baseCmd, "insertstr"))
     {
@@ -250,6 +364,7 @@ void processLine(char **cmargs)
                 sscanf(argVal, "%i:%i", &lineNo, &pos);
             }
         }
+        return insertstr(address, str, lineNo, pos);
     }
     else if (strEq(baseCmd, "cat"))
     {
@@ -544,7 +659,7 @@ void processLine(char **cmargs)
         int j = 0;
 
         // function used
-        printf(grep(listOfFiles, str, mode));
+        return grep(listOfFiles, str, mode);
     }
     else if (strEq(baseCmd, "undo"))
     {
