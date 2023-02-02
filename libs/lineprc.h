@@ -317,59 +317,40 @@ char *removestr(char *address, int lineNo, int pos, int size, char bOrF)
     {
         return "ERROR! File has not been found!";
     }
-
     FILE *file;
     file = fopen(address, "r");
-    char *preTarget = malloc(sizeof(char)), *postTarget = malloc(sizeof(char));
-    int postIdx = 0;
-    while (1)
+    char *res = (char *)malloc(256);
+    res[0] = 0;
+    int currLine = 1;
+    int bufferLength = 255;
+    char buffer[bufferLength];
+    while (fgets(buffer, bufferLength, file))
     {
-        fscanf(file, "%c", &preTarget[postIdx]);
-        if (lineNo <= 1 && pos <= 1)
-            break;
-
-        if (lineNo == 1)
-            pos--;
-        if (preTarget[postIdx] == '\n')
-            lineNo--;
-        postIdx++;
-        preTarget = realloc(preTarget, (postIdx + 1));
+        if (currLine != lineNo)
+        {
+            strcat(res, buffer);
+        }
+        else
+        {
+            int idx = 0;
+            while (buffer[idx] != '\0')
+            {
+                char c[2] = {buffer[idx], '\0'};
+                if (idx < pos - 1 || idx > pos - 2 + size)
+                {
+                    strcat(res, c);
+                }
+                idx++;
+            }
+        }
+        currLine++;
     }
 
-    postIdx = 0;
-    while (1)
-    {
-        fscanf(file, "%c", &postTarget[postIdx]);
-        if (postTarget[postIdx] == '\0')
-            break;
-        postTarget = realloc(postTarget, ((++postIdx) + 1));
-    }
     fclose(file);
-
     file = fopen(address, "w");
-
-    int forward = 0;
-    int backward = postIdx;
-
-    size--;
-
-    forward += (bOrF == 'f') * size;
-    backward -= (bOrF == 'b') * size;
-
-    for (int idx = 0; idx < backward; idx++)
-    {
-        fprintf(file, "%c", preTarget[idx]);
-    }
-
-    for (int idx = forward; idx < postIdx; idx++)
-    {
-        fprintf(file, "%c", postTarget[idx]);
-    }
-    fprintf(file, "\0");
-    free(preTarget);
-    free(postTarget);
+    fputs(res, file);
     fclose(file);
-    return "String successfully removed!";
+    return "Characters successfully removed!";
 }
 
 //
