@@ -352,14 +352,14 @@ char *removestr(char *address, int lineNo, int pos, int size, char bOrF)
     fclose(file);
     return "Characters successfully removed!";
 }
-char *cat(char *file_Name)
+char *cat(char *address)
 {
     FILE *file;
     char line[256];
 
-    if (!checkFileValidity(file_Name))
+    if (!checkFileValidity(address))
         return "ERROR! File does not exist!";
-    file = fopen(file_Name, "r");
+    file = fopen(address, "r");
     if (file == NULL)
     {
         return ("ERROR! File cannot be opened!");
@@ -376,11 +376,60 @@ char *cat(char *file_Name)
 
     return res;
 }
-
+char *copystr(char *address, int lineNo, int pos, int size, char bOrF)
+{
+    FILE *file = fopen(address, "r");
+    char line[256];
+    if (!checkFileValidity(address))
+        return "ERROR! File does not exist!";
+    char *res = malloc(256);
+    res[0] = 0;
+    int currLine = 1;
+    while (fgets(line, 256, file))
+    {
+        if (lineNo == currLine)
+        {
+            if (bOrF == 'f')
+            {
+                for (int i = pos - 1; i < size + pos - 1; i++)
+                {
+                    char c[2] = {line[i]};
+                    strcat(res, c);
+                }
+            }
+            else
+            {
+                for (int i = pos - size; i < pos - 1; i++)
+                {
+                    char c[2] = {line[i]};
+                    strcat(res, c);
+                }
+            }
+        }
+        currLine++;
+    }
+    const char *output = res;
+    const size_t len = strlen(output) + 1;
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len);
+    memcpy(GlobalLock(hMem), output, len);
+    GlobalUnlock(hMem);
+    OpenClipboard(0);
+    EmptyClipboard();
+    SetClipboardData(CF_TEXT, hMem);
+    CloseClipboard();
+    return "Text successfully copied to clipboard!";
+}
+char *cutstr(char *address, int lineNo, int pos, int size, char bOrF)
+{
+    copystr(address, lineNo, pos, size, bOrF);
+    removestr(address, lineNo, pos, size, bOrF);
+    return "Text was successfully cut to clipboard!";
+}
 //
 //
 
-char *processLine(char **cmargs)
+char *
+processLine(char **cmargs)
 {
     char *baseCmd = cmargs[0];
     if (strEq(baseCmd, "createfile"))
@@ -500,9 +549,10 @@ char *processLine(char **cmargs)
     {
         // needed
         char *address = malloc(128);
-        int lineNo = 0, pos = 0, size = 0;
-        ;
+        int lineNo = 0, pos = 0;
+        long long size = 0;
         char fOrB = 'a';
+
         //
         int i = 1;
 
@@ -515,17 +565,20 @@ char *processLine(char **cmargs)
 
             if (strEq(argKey, "-file"))
             {
+
                 strcpy(address, argVal);
             }
-            if (strEq(argKey, "-size"))
-            {
-                sscanf(argVal, "%i", &size);
-            }
+
             else if (strEq(argKey, "-pos"))
             {
                 sscanf(argVal, "%i:%i", &lineNo, &pos);
             }
+            else if (strEq(argKey, "-size"))
+            {
+                size = atoll(argVal);
+            }
         }
+
         if (strEq(cmargs[i], "-b"))
         {
             fOrB = 'b';
@@ -534,6 +587,8 @@ char *processLine(char **cmargs)
         {
             fOrB = 'f';
         }
+
+        return copystr(parsePath(address), lineNo, pos, size, fOrB);
     }
     else if (strEq(baseCmd, "cutstr"))
     {
@@ -573,6 +628,7 @@ char *processLine(char **cmargs)
         {
             fOrB = 'f';
         }
+        return cutstr(parsePath(address), lineNo, pos, size, fOrB);
     }
     else if (strEq(baseCmd, "pastestr"))
     {
