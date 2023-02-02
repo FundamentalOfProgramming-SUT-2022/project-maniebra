@@ -421,9 +421,23 @@ char *copystr(char *address, int lineNo, int pos, int size, char bOrF)
 }
 char *cutstr(char *address, int lineNo, int pos, int size, char bOrF)
 {
+    if (!checkFileValidity(address))
+        return "ERROR! File does not exist!";
     copystr(address, lineNo, pos, size, bOrF);
     removestr(address, lineNo, pos, size, bOrF);
     return "Text was successfully cut to clipboard!";
+}
+char *pastestr(char *address, int lineNo, int pos)
+{
+    if (!checkFileValidity(address))
+        return "ERROR! File does not exist!";
+    char *output = malloc(32);
+    output[0] = 0;
+    OpenClipboard(0);
+    output = GetClipboardData(CF_TEXT);
+    CloseClipboard();
+    insertstr(address, output, lineNo, pos);
+    return "Text successfully pasted!";
 }
 //
 //
@@ -652,6 +666,7 @@ processLine(char **cmargs)
                 sscanf(argVal, "%i:%i", &lineNo, &pos);
             }
         }
+        return (pastestr(parsePath(address), lineNo, pos));
     }
     else if (strEq(baseCmd, "find"))
     {
