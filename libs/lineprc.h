@@ -352,6 +352,30 @@ char *removestr(char *address, int lineNo, int pos, int size, char bOrF)
     fclose(file);
     return "Characters successfully removed!";
 }
+char *cat(char *file_Name)
+{
+    FILE *file;
+    char line[256];
+
+    if (!checkFileValidity(file_Name))
+        return "ERROR! File does not exist!";
+    file = fopen(file_Name, "r");
+    if (file == NULL)
+    {
+        return ("ERROR! File cannot be opened!");
+    }
+
+    char *res = malloc(256);
+    res[0] = 0;
+    while (fgets(line, 256, file))
+    {
+        strcat(res, line);
+    }
+
+    fclose(file);
+
+    return res;
+}
 
 //
 //
@@ -425,6 +449,7 @@ char *processLine(char **cmargs)
                 strcpy(address, argVal);
             }
         }
+        return cat(parsePath(address));
     }
     else if (strEq(baseCmd, "removestr"))
     {
