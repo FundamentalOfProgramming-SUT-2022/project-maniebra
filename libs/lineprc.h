@@ -200,6 +200,8 @@ char *grep(char **files, char *pattern, int options)
 
 char *insertstr(char *fileName, char *toBeInserted, int lineNo, int pos)
 {
+    lineNo--;
+    pos--;
     if (!checkFileValidity(fileName))
         return "ERROR! File has not been found!";
 
@@ -438,6 +440,53 @@ char *pastestr(char *address, int lineNo, int pos)
     CloseClipboard();
     insertstr(address, output, lineNo, pos);
     return "Text successfully pasted!";
+}
+char *compare(char *address1, char *address2)
+{
+
+    if (!checkFileValidity(address1))
+        return "ERROR! First file not found!";
+    if (!checkFileValidity(address2))
+        return "ERROR! Second file not found!";
+    FILE *file1 = fopen(address1, "r");
+    FILE *file2 = fopen(address2, "r");
+}
+char *autoIndent(char *address)
+{
+    char *readData = cat(address);
+    long int i = 0;
+    int currLine = 1;
+    int currPos = 1;
+    int opened = 0;
+    while (readData[i] != '\0')
+    {
+        // if (currPos == 1)
+        // {
+        //     for (int i = 0; i < opened; i++)
+        //     {
+        //         insertstr(address, "\t", currLine, currPos);
+        //     }
+        // }
+
+        if (readData[i] == '{')
+        {
+            insertstr(address, "\n", currLine, currPos);
+            opened++;
+        }
+        if (readData[i] == '}')
+        {
+            insertstr(address, "\n", currLine, currPos);
+            opened--;
+        }
+        if (readData[i] == '\n')
+        {
+            currPos = 1;
+            currLine++;
+        }
+        currPos++;
+        i++;
+    }
+    return "SUCCESS";
 }
 //
 //
@@ -845,6 +894,7 @@ processLine(char **cmargs)
                 strcpy(address, argVal);
             }
         }
+        autoIndent(parsePath(address));
     }
     else if (strEq(baseCmd, "compare"))
     {
