@@ -5,9 +5,9 @@
 char **getArg(char *inputLine)
 {
     char **listOfArgs;
-    listOfArgs = (char **)malloc(16 * sizeof(char *));
+    listOfArgs = (char **)malloc(1024 * sizeof(char *));
     int inputSize = strlen(inputLine);
-    char *arg = (char *)malloc(inputSize);
+    char *arg = (char *)malloc(inputSize * 32);
 
     int currIdx = 0;
     int currNumOfArgs = 0;

@@ -8,10 +8,24 @@
 
 int main()
 {
-    CreateFolder(rootFolder);
-    string line = input();
-    string *cmargs = getArg(line);
-    string response = malloc(512);
-    response = processLine(cmargs);
-    puts(response);
+    while (true)
+    {
+        CreateFolder(rootFolder);
+        string line = input();
+        if (strstr(line, "=D") == NULL)
+        {
+            if (line[strlen(line) - 1] == '\n')
+            {
+                line = substr(line, 0, strlen(line) - 1);
+            }
+            if (strEq(line, "exit"))
+            {
+                return 0;
+            }
+            string *cmargs = getArg(line);
+            string response = malloc(512);
+            response = processLine(cmargs);
+            puts(response);
+        }
+    }
 }

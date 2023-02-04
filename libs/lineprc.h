@@ -72,6 +72,7 @@ void CreateFolder(const char *path)
         return;
     }
 }
+
 bool checkFileValidity(char *filename)
 {
     struct stat buffer;
@@ -114,7 +115,8 @@ char *createFile(char fileAddress[])
 }
 char *grep(char **files, char *pattern, int options)
 {
-    static char output[] = "";
+    char *output = malloc(4096);
+    output[0] = 0;
 
     bool printIt = 0,
          count = 0, list = 0;
@@ -142,22 +144,26 @@ char *grep(char **files, char *pattern, int options)
     int counter = 0;
 
     int idx = 0;
-    while (*(files + idx) != NULL)
+    while (files[idx])
     {
 
-        bool valid = checkFileValidity(*(files + idx));
+        bool valid = checkFileValidity(files[idx]);
         if (valid)
         {
             FILE *curr;
-            curr = fopen(*(files + idx), "a+");
-            char line[50];
-            while (fgets(line, 50, curr) != NULL)
+
+            curr = fopen(files[idx], "a+");
+
+            char *line = malloc(256);
+            line[0] = 0;
+            while (fgets(line, 50, curr))
             {
-                if (strstr(line, pattern))
+
+                if (strstr(line, removeQs(pattern)) != NULL)
                 {
                     if (printIt)
                     {
-                        strcat(output, *(files + idx));
+                        strcat(output, files[idx]);
                         strcat(output, " : ");
 
                         strcat(output, line);
@@ -168,7 +174,7 @@ char *grep(char **files, char *pattern, int options)
                     }
                     else if (list)
                     {
-                        strcat(output, *(files + idx));
+                        strcat(output, files[idx]);
                         strcat(output, "\n");
 
                         break;
@@ -179,9 +185,9 @@ char *grep(char **files, char *pattern, int options)
         }
         else
         {
-            strcat(output, "Error! File ");
+            strcat(output, "Error! File \0");
             strcat(output, *(files + idx));
-            strcat(output, "has not been found!\n");
+            strcat(output, " has not been found!\n");
             strcat(output, "\n");
         }
 
@@ -189,7 +195,7 @@ char *grep(char **files, char *pattern, int options)
     }
     if (count)
     {
-        char lli[] = "";
+        char *lli = malloc(256);
         sprintf(lli, "%i", counter);
         strcat(output, lli);
         strcat(output, "\n");
@@ -325,7 +331,7 @@ char *removestr(char *address, int lineNo, int pos, int size, char bOrF)
     res[0] = 0;
     int currLine = 1;
     int bufferLength = 255;
-    char buffer[bufferLength];
+    char buffer[256];
     while (fgets(buffer, bufferLength, file))
     {
         if (currLine != lineNo)
@@ -443,51 +449,12 @@ char *pastestr(char *address, int lineNo, int pos)
 }
 char *compare(char *address1, char *address2)
 {
-
-    if (!checkFileValidity(address1))
-        return "ERROR! First file not found!";
-    if (!checkFileValidity(address2))
-        return "ERROR! Second file not found!";
-    FILE *file1 = fopen(address1, "r");
-    FILE *file2 = fopen(address2, "r");
 }
+
 char *autoIndent(char *address)
 {
-    char *readData = cat(address);
-    long int i = 0;
-    int currLine = 1;
-    int currPos = 1;
-    int opened = 0;
-    while (readData[i] != '\0')
-    {
-        // if (currPos == 1)
-        // {
-        //     for (int i = 0; i < opened; i++)
-        //     {
-        //         insertstr(address, "\t", currLine, currPos);
-        //     }
-        // }
-
-        if (readData[i] == '{')
-        {
-            insertstr(address, "\n", currLine, currPos);
-            opened++;
-        }
-        if (readData[i] == '}')
-        {
-            insertstr(address, "\n", currLine, currPos);
-            opened--;
-        }
-        if (readData[i] == '\n')
-        {
-            currPos = 1;
-            currLine++;
-        }
-        currPos++;
-        i++;
-    }
-    return "SUCCESS";
 }
+
 //
 //
 
@@ -611,7 +578,7 @@ processLine(char **cmargs)
     else if (strEq(baseCmd, "copystr"))
     {
         // needed
-        char *address = malloc(128);
+        char *address = malloc(256);
         int lineNo = 0, pos = 0;
         long long size = 0;
         char fOrB = 'a';
@@ -722,7 +689,8 @@ processLine(char **cmargs)
         // needed
         char *address = malloc(128);
         char *str = malloc(128);
-        int mode = 0;
+        int byword = 0, at = 0, count = 0, all = 0;
+
         int mode2ndArg = -1;
         //
         for (int i = 1; cmargs[i] != NULL && cmargs[i + 1] != NULL; i += 2)
@@ -746,25 +714,25 @@ processLine(char **cmargs)
         {
             if (strEq(cmargs[i], "-count"))
             {
-                mode += 1;
+                count = 1;
             }
             else if (strEq(cmargs[i], "-at"))
             {
-                mode += 10;
-                sscanf("%d", cmargs[i + 1], &mode2ndArg);
+                sscanf("%d", cmargs[i + 1], &at);
                 i++;
             }
             else if (strEq(cmargs[i], "-all"))
             {
-                mode += 100;
+                ;
             }
             else if (strEq(cmargs[i], "-byword"))
             {
-                mode += 1000;
+                byword = 1;
             }
 
             i++;
         }
+        // find(str, address, byword, at, all);
     }
     else if (strEq(baseCmd, "replace"))
     {
@@ -819,7 +787,7 @@ processLine(char **cmargs)
         // needed
         char *str = malloc(128);
         int mode = 0;
-        char **listOfFiles = (char **)malloc(64 * sizeof(char *));
+        char **listOfFiles = malloc(256 * 16);
         //
         int currNumOfFiles = 0;
         if (strEq("-str", cmargs[1]))
@@ -915,6 +883,7 @@ processLine(char **cmargs)
                 strcpy(address2, argVal);
             }
         }
+        return compare(parsePath(address1), parsePath(address2));
     }
     else if (strEq(baseCmd, "tree"))
     {
@@ -922,5 +891,6 @@ processLine(char **cmargs)
         int depth = 0;
         //
         sscanf(cmargs[1], "%d", &depth);
+        // tree(rootFolder, 0, depth);
     }
 }
