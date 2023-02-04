@@ -154,7 +154,7 @@ char *grep(char **files, char *pattern, int options)
 
             curr = fopen(files[idx], "a+");
 
-            char *line = malloc(256);
+            char *line = malloc(512);
             line[0] = 0;
             while (fgets(line, 50, curr))
             {
@@ -187,15 +187,14 @@ char *grep(char **files, char *pattern, int options)
         {
             strcat(output, "Error! File \0");
             strcat(output, *(files + idx));
-            strcat(output, " has not been found!\n");
-            strcat(output, "\n");
+            strcat(output, " has not been found!\n\0");
         }
 
         idx++;
     }
     if (count)
     {
-        char *lli = malloc(256);
+        char *lli = malloc(512);
         sprintf(lli, "%i", counter);
         strcat(output, lli);
         strcat(output, "\n");
@@ -449,6 +448,36 @@ char *pastestr(char *address, int lineNo, int pos)
 }
 char *compare(char *address1, char *address2)
 {
+}
+
+char *find(char *address, char *str, int byword, int at, int count, int all)
+{
+    // printf("%i %i %i %i", byword, at, count, all);
+    if (1)
+    {
+        char *data = cat(address);
+        int strSize = strlen(str);
+        int allLen = 0;
+        int listOfPoses[1024] = {0};
+        int cnt = 0;
+        char *token = strtok(data, str);
+        while (token != NULL)
+        {
+            allLen += strlen(token);
+            listOfPoses[cnt++] = allLen + 1;
+            allLen += strSize;
+            token = strtok(NULL, str);
+        }
+        if (at)
+        {
+            char *output = calloc(128, 1);
+            sprintf(output, "%i", allLen);
+            return output;
+        }
+        if (all)
+        {
+        }
+    }
 }
 
 char *autoIndent(char *address)
@@ -712,27 +741,28 @@ processLine(char **cmargs)
         int i = 5;
         while (cmargs[i] != NULL)
         {
+            // printf("-{%s}-\n", cmargs[i]);
             if (strEq(cmargs[i], "-count"))
             {
                 count = 1;
             }
-            else if (strEq(cmargs[i], "-at"))
+            if (strEq(cmargs[i], "-at"))
             {
-                sscanf("%d", cmargs[i + 1], &at);
+                sscanf(cmargs[i + 1], "%d", &at);
                 i++;
             }
-            else if (strEq(cmargs[i], "-all"))
+            if (strEq(cmargs[i], "-all"))
             {
-                ;
+                all = 1;
             }
-            else if (strEq(cmargs[i], "-byword"))
+            if (strEq(cmargs[i], "-byword"))
             {
                 byword = 1;
             }
 
             i++;
         }
-        // find(str, address, byword, at, all);
+        return find(parsePath(address), str, byword, at, count, all);
     }
     else if (strEq(baseCmd, "replace"))
     {
