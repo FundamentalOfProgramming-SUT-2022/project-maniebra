@@ -456,6 +456,70 @@ char *compare(char *address1, char *address2)
 char *find(char *address, char *str, int byword, int at, int count, int all)
 {
     // printf("%i %i %i %i", byword, at, count, all);
+    if (byword)
+    {
+        FILE *file = fopen(address, "r");
+        char *line = malloc(256);
+        int allLen = 0;
+        int listOfPoses[1024] = {0};
+        int cnt = 0;
+        while (fgets(line, 256, file))
+
+        {
+            char *token = strtok(line, " ");
+
+            while (token != NULL)
+            {
+                if (strEq(token, str))
+                {
+                    listOfPoses[cnt++] = allLen + 1;
+                }
+                allLen++;
+
+                token = strtok(NULL, " ");
+            }
+        }
+        if (count)
+        {
+            char *output = calloc(128, 1);
+            sprintf(output, "%i", cnt);
+            return output;
+        }
+        if (cnt <= 0)
+        {
+            return "No results!";
+        }
+
+        else if (at)
+        {
+            if (cnt < at)
+            {
+                return "ERROR! not so many occurences found!";
+            }
+            char *output = calloc(128, 1);
+            sprintf(output, "%i", listOfPoses[at - 1]);
+            return output;
+        }
+        else if (all)
+        {
+            char *output = calloc(128 * 16, 1);
+            char *temp = calloc(128, 1);
+            sprintf(temp, "%i", listOfPoses[0]);
+            strcat(output, temp);
+            for (int i = 1; i < cnt; i++)
+            {
+                sprintf(temp, ", %i", listOfPoses[i]);
+                strcat(output, temp);
+            }
+            return output;
+        }
+        else
+        {
+            char *output = calloc(128, 1);
+            sprintf(output, "%i", listOfPoses[0]);
+            return output;
+        }
+    }
     if (!byword)
     {
         char *data = cat(address);
@@ -505,7 +569,7 @@ char *find(char *address, char *str, int byword, int at, int count, int all)
                 return "ERROR! not so many occurences found!";
             }
             char *output = calloc(128, 1);
-            sprintf(output, "%i", listOfPoses[at - 1]);
+            sprintf(output, "%i", listOfPoses[at - 1] + 1);
             return output;
         }
 
@@ -513,11 +577,11 @@ char *find(char *address, char *str, int byword, int at, int count, int all)
         {
             char *output = calloc(128 * 16, 1);
             char *temp = calloc(128, 1);
-            sprintf(temp, "%i", listOfPoses[0]);
+            sprintf(temp, "%i", listOfPoses[0] + 1);
             strcat(output, temp);
             for (int i = 1; i < cnt; i++)
             {
-                sprintf(temp, ", %i", listOfPoses[i]);
+                sprintf(temp, ", %i", listOfPoses[i] + 1);
                 strcat(output, temp);
             }
             return output;
@@ -525,7 +589,7 @@ char *find(char *address, char *str, int byword, int at, int count, int all)
         else
         {
             char *output = calloc(128, 1);
-            sprintf(output, "%i", listOfPoses[0]);
+            sprintf(output, "%i", listOfPoses[0] + 1);
             return output;
         }
     }
