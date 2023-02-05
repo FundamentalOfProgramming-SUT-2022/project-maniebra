@@ -72,6 +72,24 @@ void CreateFolder(const char *path)
         return;
     }
 }
+char *targetFolder(char *address)
+{
+
+    int end = strlen(address);
+    while (address[end] != '/' && address[end] != '\\')
+    {
+        end--;
+    }
+    address = substr(address, 0, end + 1);
+    // address = parsePath(address);
+    char *output = calloc(1, 256);
+    if (address[1] != ':' && (address[2] != '/' || address[2] != '\\'))
+    {
+        strcat(output, rootFolder);
+    }
+    strcat(output, address);
+    return output;
+}
 
 bool checkFileValidity(char *filename)
 {
@@ -98,7 +116,7 @@ int strstrIdx(char *haystack, char *needle)
 //
 char *createFile(char fileAddress[])
 {
-    CreateFolder(fileAddress);
+    CreateFolder(targetFolder(fileAddress));
     fileAddress = parsePath(fileAddress);
     FILE *file;
     file = fopen(fileAddress, "w");
