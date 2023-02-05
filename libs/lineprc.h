@@ -89,7 +89,10 @@ char *removeQs(char *argVal)
     }
     return argVal;
 }
-
+int strstrIdx(char *haystack, char *needle)
+{
+    return strstr(haystack, needle) - haystack;
+}
 //
 // demanded cmds
 //
@@ -453,29 +456,77 @@ char *compare(char *address1, char *address2)
 char *find(char *address, char *str, int byword, int at, int count, int all)
 {
     // printf("%i %i %i %i", byword, at, count, all);
-    if (1)
+    if (!byword)
     {
         char *data = cat(address);
         int strSize = strlen(str);
         int allLen = 0;
         int listOfPoses[1024] = {0};
         int cnt = 0;
+        int firstFound = 0;
+        if (!strstrIdx(data, str))
+        {
+            firstFound = 1;
+            cnt++;
+            listOfPoses[0] = 0;
+        }
         char *token = strtok(data, str);
+
         while (token != NULL)
         {
-            allLen += strlen(token);
-            listOfPoses[cnt++] = allLen + 1;
-            allLen += strSize;
+            if (!((token[0] == '\n' || token[0] == ' ') && strlen(token) == 1))
+            {
+                // printf("**{%s}**\n", token);
+                allLen += strlen(token);
+                listOfPoses[cnt++] = allLen + 1;
+                allLen += strSize;
+            }
             token = strtok(NULL, str);
         }
-        if (at)
+        // cnt--;
+        if (firstFound && cnt != 1)
+            cnt--;
+        if (cnt > 1)
+            cnt--;
+        if (count)
         {
             char *output = calloc(128, 1);
-            sprintf(output, "%i", allLen);
+            sprintf(output, "%i", cnt);
             return output;
         }
-        if (all)
+        else if (cnt <= 0)
         {
+            return "No results!";
+        }
+        else if (at)
+        {
+            if (cnt < at)
+            {
+                return "ERROR! not so many occurences found!";
+            }
+            char *output = calloc(128, 1);
+            sprintf(output, "%i", listOfPoses[at - 1]);
+            return output;
+        }
+
+        else if (all)
+        {
+            char *output = calloc(128 * 16, 1);
+            char *temp = calloc(128, 1);
+            sprintf(temp, "%i", listOfPoses[0]);
+            strcat(output, temp);
+            for (int i = 1; i < cnt; i++)
+            {
+                sprintf(temp, ", %i", listOfPoses[i]);
+                strcat(output, temp);
+            }
+            return output;
+        }
+        else
+        {
+            char *output = calloc(128, 1);
+            sprintf(output, "%i", listOfPoses[0]);
+            return output;
         }
     }
 }
