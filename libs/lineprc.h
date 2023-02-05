@@ -613,6 +613,46 @@ char *find(char *address, char *str, int byword, int at, int count, int all)
     }
 }
 
+char *replace(char *address, char *str1, char *str2, int at, int all)
+{
+    int size = strlen(str1);
+    if (at)
+    {
+        int charPos = atoi(find(address, str1, 0, at, 0, 0));
+        charPos--;
+        printf("%i", charPos);
+        char *data = calloc(8192, 1);
+        strcpy(data, cat(address));
+
+        int line = 1;
+        int pos = 1;
+        int cntr = 0;
+        int i = 0;
+        while (cntr < charPos)
+        {
+            pos++;
+            if (data[i] == '\n')
+            {
+
+                line++;
+                pos = 1;
+                cntr -= 2;
+            }
+            i++;
+            cntr++;
+        }
+        removestr(address, line, pos, size, 'f');
+        insertstr(address, str2, line, pos);
+        if (!all)
+            return "Replace succeed!";
+    }
+    if (!strEq(find(address, str1, 0, 0, 0, 0), "No results!"))
+    {
+        replace(address, str1, str2, 0, 1);
+    }
+    return "All replaced!";
+}
+
 char *autoIndent(char *address)
 {
 }
@@ -853,7 +893,6 @@ processLine(char **cmargs)
         char *str = malloc(128);
         int byword = 0, at = 0, count = 0, all = 0;
 
-        int mode2ndArg = -1;
         //
         for (int i = 1; cmargs[i] != NULL && cmargs[i + 1] != NULL; i += 2)
         {
@@ -903,8 +942,7 @@ processLine(char **cmargs)
         char *address = malloc(128);
         char *str1 = malloc(128);
         char *str2 = malloc(128);
-        int mode = 0;
-        int mode2ndArg = -1;
+        int at = 0, all = 0;
         //
         for (int i = 1; cmargs[i] != NULL && cmargs[i + 1] != NULL; i += 2)
         {
@@ -932,17 +970,17 @@ processLine(char **cmargs)
 
             if (strEq(cmargs[i], "-at"))
             {
-                mode += 10;
-                sscanf("%d", cmargs[i + 1], &mode2ndArg);
+                sscanf(cmargs[i + 1], "%d", &at);
                 i++;
             }
             else if (strEq(cmargs[i], "-all"))
             {
-                mode += 100;
+                all = 1;
             }
 
             i++;
         }
+        return replace(parsePath(address), str1, str2, at, all);
     }
     else if (strEq(baseCmd, "grep"))
     {
