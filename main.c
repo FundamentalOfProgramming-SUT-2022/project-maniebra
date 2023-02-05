@@ -27,5 +27,8 @@ int main()
             response = processLine(cmargs);
             puts(response);
         }
+        else
+        {
+        }
     }
 }
